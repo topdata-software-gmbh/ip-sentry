@@ -35,7 +35,7 @@ func New(cfg config.Config) (*Monitor, error) {
 		return nil, fmt.Errorf("block_log_output is required")
 	}
 
-	logger, err := zap.NewProduction()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +46,11 @@ func New(cfg config.Config) (*Monitor, error) {
 		logger:    logger,
 		hostCache: make(map[string]string),
 	}
+
+	m.logger.Info("Initializing Monitor",
+		zap.Int("sources", len(cfg.LogSources)),
+		zap.String("output", cfg.BlockLogOutput),
+	)
 
 	if err := os.MkdirAll(filepath.Dir(cfg.BlockLogOutput), 0o755); err != nil {
 		return nil, fmt.Errorf("create block log directory: %w", err)
@@ -64,6 +69,7 @@ func New(cfg config.Config) (*Monitor, error) {
 				m.logger.Warn("failed to open GeoIP DB", zap.String("path", cfg.GeoIPDBPath), zap.Error(err))
 			} else {
 				m.geoDB = geoDB
+				m.logger.Info("GeoIP Database loaded successfully")
 			}
 		} else {
 			m.logger.Warn("GeoIP DB not found; country checks disabled", zap.String("path", cfg.GeoIPDBPath))
@@ -88,11 +94,13 @@ func (m *Monitor) Run(ctx context.Context) error {
 	errCh := make(chan error, len(m.cfg.LogSources))
 	var wg sync.WaitGroup
 
+	m.logger.Info("Monitor engine started")
 	for _, source := range m.cfg.LogSources {
 		source := source
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			m.logger.Info("Starting tailer for source", zap.String("path", source))
 			m.tailSource(ctx, source, lineCh, errCh)
 		}()
 	}
