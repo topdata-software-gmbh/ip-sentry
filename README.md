@@ -33,7 +33,7 @@ Default config path: `configs/config.yaml`
 ```yaml
 log_sources:
   - "/var/log/nginx/access.log"
-block_log_output: "/var/log/nginx/go_blocks.log"
+block_log_output: "/var/log/nginx/ip-sentry-blocks.log"
 fail2ban_config_path: "/etc/fail2ban"
 geoip_db_path: "/app/data/geoip/GeoLite2-City.mmdb"
 

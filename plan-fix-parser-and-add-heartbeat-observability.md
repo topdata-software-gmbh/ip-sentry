@@ -215,7 +215,7 @@ Add a threshold for blocks to ensure scrapers hitting high frequencies are defin
 ```yaml
 log_sources:
   - "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/access.log"
-block_log_output: "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/go_blocks.log"
+block_log_output: "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/ip-sentry-blocks.log"
 fail2ban_config_path: "/srv/topdata-nginx-proxy-v2/vol/fail2ban"
 geoip_db_path: "./data/geoip/GeoLite2-City.mmdb"
 

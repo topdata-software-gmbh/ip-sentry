@@ -21,7 +21,7 @@ The aggregator was aligned to the existing nginx-proxy infrastructure by removin
 - Added fail2ban_config_path to the typed app config.
 - Updated config defaults:
   - log_sources -> /srv/topdata-nginx-proxy-v2/vol/nginx_logs/access.log
-  - block_log_output -> /srv/topdata-nginx-proxy-v2/vol/nginx_logs/go_blocks.log
+  - block_log_output -> /srv/topdata-nginx-proxy-v2/vol/nginx_logs/ip-sentry-blocks.log
   - fail2ban_config_path -> /srv/topdata-nginx-proxy-v2/vol/fail2ban
   - max_requests_per_minute -> 50
 - Added startup path checks and bridge-log telemetry in monitor initialization.

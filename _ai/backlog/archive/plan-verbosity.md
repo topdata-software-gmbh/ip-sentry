@@ -131,7 +131,7 @@ Improved the visibility of the application during startup and clarified the purp
 ```bash
 $ go run . run --config configs/config.yaml
 using config: configs/config.yaml
-INFO	Initializing Monitor	{"sources": 1, "output": "/var/log/nginx/go_blocks.log"}
+INFO	Initializing Monitor	{"sources": 1, "output": "/var/log/nginx/ip-sentry-blocks.log"}
 INFO	GeoIP Database loaded successfully
 INFO	Monitor engine started
 INFO	Starting tailer for source	{"path": "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/access.log"}

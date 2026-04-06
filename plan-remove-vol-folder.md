@@ -85,7 +85,7 @@ log_sources:
 
 # This file must be inside the nginx_logs folder so the 
 # Fail2ban container in the proxy stack can see it!
-block_log_output: "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/go_blocks.log"
+block_log_output: "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/ip-sentry-blocks.log"
 
 # Path to the proxy's fail2ban config for reference/setup
 fail2ban_config_path: "/srv/topdata-nginx-proxy-v2/vol/fail2ban"
@@ -188,8 +188,8 @@ The Aggregator is now correctly aligned with the `topdata-nginx-proxy-v2` file s
 
 ## Testing Notes
 1. Verify the aggregator starts and logs `Verified` for the access.log path.
-2. Check that `go_blocks.log` is created inside the proxy's `vol/nginx_logs/` folder.
-3. Run `tail -f /srv/topdata-nginx-proxy-v2/vol/nginx_logs/go_blocks.log` while the aggregator is running to see real-time detection events.
+2. Check that `ip-sentry-blocks.log` is created inside the proxy's `vol/nginx_logs/` folder.
+3. Run `tail -f /srv/topdata-nginx-proxy-v2/vol/nginx_logs/ip-sentry-blocks.log` while the aggregator is running to see real-time detection events.
 ```
 
 ### Note on Fail2ban Filter/Jail
@@ -205,7 +205,7 @@ Since you removed the `vol` folder from the Go project, make sure your **Nginx P
     [nginx-aggregator]
     enabled  = true
     filter   = nginx-aggregator
-    logpath  = /var/log/nginx/go_blocks.log
+    logpath  = /var/log/nginx/ip-sentry-blocks.log
     maxretry = 1
     ```
 

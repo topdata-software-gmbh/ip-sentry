@@ -17,8 +17,8 @@ The current infrastructure is under stress from aggressive scrapers. While a leg
 This plan introduces `topdata-ip-aggregator`, a Go CLI application built with Cobra. 
 1. **Tailing**: It will use a tailing library to watch active Nginx logs.
 2. **Detection**: It will track request frequencies per IP using an in-memory window. It will also perform GeoIP lookups and hostname checks.
-3. **Integration**: Instead of modifying `iptables` directly (avoiding privilege escalation and duplication of logic), the Go app will write "Block Events" to a dedicated log file (`/var/log/nginx/go_blocks.log`).
-4. **Fail2ban**: A custom Fail2ban jail will be configured to monitor `go_blocks.log` and perform the actual ban.
+3. **Integration**: Instead of modifying `iptables` directly (avoiding privilege escalation and duplication of logic), the Go app will write "Block Events" to a dedicated log file (`/var/log/nginx/ip-sentry-blocks.log`).
+4. **Fail2ban**: A custom Fail2ban jail will be configured to monitor `ip-sentry-blocks.log` and perform the actual ban.
 
 # Project Environment
 - **Project Name**: `topdata-ip-aggregator`
@@ -59,7 +59,7 @@ The app needs to know which countries to block, thresholds, and log paths.
 ```yaml
 log_sources:
   - "/var/log/nginx/access.log"
-block_log_output: "/var/log/nginx/go_blocks.log"
+block_log_output: "/var/log/nginx/ip-sentry-blocks.log"
 geoip_db_path: "./data/geoip/GeoLite2-City.mmdb"
 
 thresholds:
@@ -182,7 +182,7 @@ var runCmd = &cobra.Command{
         // Initialize GeoIP
         // Start Tailing
         // Pipe lines through Parser -> Detector
-        // On Detection -> Write to go_blocks.log
+        // On Detection -> Write to ip-sentry-blocks.log
         return nil
     },
 }
@@ -195,7 +195,7 @@ var runCmd = &cobra.Command{
 enabled  = true
 port     = http,https
 filter   = nginx-aggregator
-logpath  = /var/log/nginx/go_blocks.log
+logpath  = /var/log/nginx/ip-sentry-blocks.log
 maxretry = 1
 bantime  = 86400 ; Ban for 24 hours
 ```
@@ -256,13 +256,13 @@ Successfully implemented a Go-based real-time log monitor that integrates with t
 - Optimized memory usage for IP tracking using sliding windows.
 
 ## Technical Decisions
-- **Bridge Log**: Decided to write to `go_blocks.log` instead of calling `iptables` directly to ensure the Go app doesn't need `root` or `NET_ADMIN` capabilities; `fail2ban` (which already has these) handles the actual blocking.
+- **Bridge Log**: Decided to write to `ip-sentry-blocks.log` instead of calling `iptables` directly to ensure the Go app doesn't need `root` or `NET_ADMIN` capabilities; `fail2ban` (which already has these) handles the actual blocking.
 - **In-Memory Tracking**: Used a mutex-protected map for IP tracking. For very high traffic, a Redis-backed store could be swapped in easily.
 
 ## Testing Notes
 1. Run the app: `go run main.go run`.
 2. Generate traffic: `ab -n 200 -c 10 http://localhost/`.
-3. Check `go_blocks.log`: Ensure the IP appears.
+3. Check `ip-sentry-blocks.log`: Ensure the IP appears.
 4. Check `fail2ban-client status nginx-aggregator`: Ensure the IP is banned.
 ```
 

@@ -14,7 +14,7 @@ documentType: IMPLEMENTATION_REPORT
 ---
 
 ## Summary
-Implemented a Go-based real-time log monitor that tails Nginx access logs, evaluates rule-based blocking criteria, and writes block intents to `go_blocks.log` for fail2ban enforcement.
+Implemented a Go-based real-time log monitor that tails Nginx access logs, evaluates rule-based blocking criteria, and writes block intents to `ip-sentry-blocks.log` for fail2ban enforcement.
 
 ## Key Changes
 - Created a Cobra-based CLI entrypoint with Viper config loading.
@@ -36,5 +36,5 @@ Implemented a Go-based real-time log monitor that tails Nginx access logs, evalu
 1. Resolve dependencies: `go mod tidy`.
 2. Start monitor: `go run . run --config configs/config.yaml`.
 3. Generate traffic from a single client over threshold.
-4. Verify event lines in `/var/log/nginx/go_blocks.log`.
+4. Verify event lines in `/var/log/nginx/ip-sentry-blocks.log`.
 5. Verify bans via `fail2ban-client status nginx-aggregator`.
