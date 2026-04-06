@@ -1,0 +1,7 @@
+[nginx-aggregator]
+enabled  = true
+port     = http,https
+filter   = nginx-aggregator
+logpath  = /var/log/nginx/go_blocks.log
+maxretry = 1
+bantime  = 86400
