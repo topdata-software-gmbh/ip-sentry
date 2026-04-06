@@ -2,14 +2,14 @@
 #
 # Pushes the Docker image to a registry
 #
-# Usage: ./push-docker-image.sh [-h|--help] [OPTIONS]
+# Usage: ./build-and-push-docker-image [-h|--help] [OPTIONS]
 #   -h, --help     Show this help message
 #   REGISTRY=...   Registry URL (default: docker.io)
 #   IMAGE_NAME=... Image name (default: topdata/ip-sentry)
 #   VERSION=...    Image version (default: latest)
 #
 # Example:
-#   REGISTRY=ghcr.io VERSION=v1.0.0 ./push-docker-image.sh
+#   REGISTRY=ghcr.io VERSION=v1.0.0 ./build-and-push-docker-image
 
 set -e
 

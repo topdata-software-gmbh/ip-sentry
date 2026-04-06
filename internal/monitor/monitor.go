@@ -200,6 +200,8 @@ func (m *Monitor) tailSource(ctx context.Context, source string, lineCh chan<- s
 			return
 		case line, ok := <-t.Lines:
 			if !ok {
+				// Channel closed (e.g., empty file) - wait for context instead of exiting
+				<-ctx.Done()
 				return
 			}
 			if line == nil {
