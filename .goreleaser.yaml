@@ -48,7 +48,7 @@ dockers:
       - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/ip-sentry:latest"
     dockerfile: Dockerfile.release
     extra_files:
-      - scripts/**
+      - scripts
     use: buildx
     build_flag_templates:
       - "--label=org.opencontainers.image.title={{ .ProjectName }}"
