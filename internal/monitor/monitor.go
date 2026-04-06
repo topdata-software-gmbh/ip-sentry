@@ -12,10 +12,10 @@ import (
 
 	"github.com/nxadm/tail"
 	"github.com/oschwald/geoip2-golang"
-	"github.com/topdata/topdata-ip-aggregator/internal/aggregator"
-	"github.com/topdata/topdata-ip-aggregator/internal/config"
-	"github.com/topdata/topdata-ip-aggregator/internal/models"
-	"github.com/topdata/topdata-ip-aggregator/internal/parser"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/aggregator"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/config"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/models"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/parser"
 	"go.uber.org/zap"
 )
 

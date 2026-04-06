@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/topdata/topdata-ip-aggregator/internal/config"
-	"github.com/topdata/topdata-ip-aggregator/internal/models"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/config"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/models"
 )
 
 type Detector struct {

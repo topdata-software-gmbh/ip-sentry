@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	appcfg "github.com/topdata/topdata-ip-aggregator/internal/config"
-	"github.com/topdata/topdata-ip-aggregator/internal/monitor"
+	appcfg "github.com/topdata-software-gmbh/ip-sentry/internal/config"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/monitor"
 )
 
 var runCmd = &cobra.Command{

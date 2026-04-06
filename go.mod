@@ -1,4 +1,4 @@
-module github.com/topdata/topdata-ip-aggregator
+module github.com/topdata-software-gmbh/ip-sentry
 
 go 1.21
 

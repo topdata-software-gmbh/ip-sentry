@@ -1,0 +1,19 @@
+# Build artifacts
+ip-sentry
+topdata-ip-aggregator
+
+# Go test cache
+*.test
+*.out
+
+# Data / secrets
+data/geoip/
+
+# Editor / OS artifacts
+.DS_Store
+.idea/
+.vscode/
+
+# Plan / documentation
+_ai/
+*.md

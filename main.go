@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/topdata/topdata-ip-aggregator/cmd"
+	"github.com/topdata-software-gmbh/ip-sentry/cmd"
 )
 
 func main() {

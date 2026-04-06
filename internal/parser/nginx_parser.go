@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/topdata/topdata-ip-aggregator/internal/models"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/models"
 )
 
 var logRegex = regexp.MustCompile(`^(?:(\S+)\s+)?(\d{1,3}(?:\.\d{1,3}){3}|[a-fA-F0-9:]+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"(\S+)\s+([^"]+?)\s+[^"]+"\s+\d+\s+\d+\s+"[^"]*"\s+"([^"]*)"`)

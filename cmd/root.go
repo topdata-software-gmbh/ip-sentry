@@ -11,7 +11,7 @@ import (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "topdata-ip-aggregator",
+	Use:   "ip-sentry",
 	Short: "Real-time Nginx log monitor with fail2ban bridge output",
 }
 
