@@ -5,7 +5,8 @@ fail2ban_config_path: "/srv/topdata-nginx-proxy-v2/vol/fail2ban"
 geoip_db_path: "./data/geoip/GeoLite2-City.mmdb"
 
 thresholds:
-  max_requests_per_minute: 50
+  # Lowered to 30 for testing to catch scrapers quickly
+  max_requests_per_minute: 30
 
 blacklist:
   countries: ["CN", "RU", "IN"]

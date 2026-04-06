@@ -8,11 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/nxadm/tail"
 	"github.com/oschwald/geoip2-golang"
 	"github.com/topdata/topdata-ip-aggregator/internal/aggregator"
 	"github.com/topdata/topdata-ip-aggregator/internal/config"
+	"github.com/topdata/topdata-ip-aggregator/internal/models"
 	"github.com/topdata/topdata-ip-aggregator/internal/parser"
 	"go.uber.org/zap"
 )
@@ -25,6 +27,7 @@ type Monitor struct {
 	blockLog   *os.File
 	hostCache  map[string]string
 	hostCacheM sync.RWMutex
+	stats      models.GlobalStats
 }
 
 func New(cfg config.Config) (*Monitor, error) {
@@ -123,6 +126,7 @@ func (m *Monitor) Run(ctx context.Context) error {
 	var wg sync.WaitGroup
 
 	m.logger.Info("Monitor engine starting")
+	go m.startHeartbeat(ctx)
 	m.logger.Info("Tailing log files", zap.Int("count", len(m.cfg.LogSources)))
 	for _, source := range m.cfg.LogSources {
 		source := source
@@ -151,9 +155,28 @@ func (m *Monitor) Run(ctx context.Context) error {
 			if !ok {
 				return nil
 			}
+			m.stats.IncrementProcessed()
 			if err := m.processLine(line); err != nil {
 				m.logger.Warn("line processing failed", zap.Error(err))
 			}
+		}
+	}
+}
+
+func (m *Monitor) startHeartbeat(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			m.logger.Info("HEARTBEAT STATS",
+				zap.Uint64("processed_lines", m.stats.Processed()),
+				zap.Uint64("successfully_parsed", m.stats.Parsed()),
+				zap.Uint64("blocks_generated", m.stats.Blocks()),
+			)
 		}
 	}
 }
@@ -203,6 +226,7 @@ func (m *Monitor) processLine(line string) error {
 	if entry == nil {
 		return nil
 	}
+	m.stats.IncrementParsed()
 
 	country := m.lookupCountry(entry.IP)
 	hostname := m.lookupHostname(entry.IP)
@@ -210,6 +234,7 @@ func (m *Monitor) processLine(line string) error {
 	if event == nil {
 		return nil
 	}
+	m.stats.IncrementBlocks()
 
 	_, err := fmt.Fprintf(
 		m.blockLog,
