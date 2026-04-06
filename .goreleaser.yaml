@@ -54,6 +54,3 @@ dockers:
       - "--label=org.opencontainers.image.source={{ .GitURL }}"
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.created={{ .Date }}"
-      # Since you are building for multiple architectures,
-      # this ensures the correct platform is passed to Docker
-      - "--platform=linux/{{ .Arch }}"
