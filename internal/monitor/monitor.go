@@ -47,15 +47,43 @@ func New(cfg config.Config) (*Monitor, error) {
 		hostCache: make(map[string]string),
 	}
 
-	m.logger.Info("Initializing Monitor",
+	m.logger.Info("Initializing monitor",
 		zap.Int("sources", len(cfg.LogSources)),
 		zap.String("output", cfg.BlockLogOutput),
 	)
+
+	m.logger.Info("Checking infrastructure paths")
+	for _, source := range cfg.LogSources {
+		if _, err := os.Stat(source); err != nil {
+			if os.IsNotExist(err) {
+				m.logger.Warn("Log source not found", zap.String("path", source))
+				continue
+			}
+			m.logger.Warn("Log source check failed", zap.String("path", source), zap.Error(err))
+			continue
+		}
+		m.logger.Info("Log source verified", zap.String("path", source))
+	}
+
+	if cfg.Fail2banConfigPath != "" {
+		if fi, err := os.Stat(cfg.Fail2banConfigPath); err != nil {
+			if os.IsNotExist(err) {
+				m.logger.Warn("Fail2ban config path not found", zap.String("path", cfg.Fail2banConfigPath))
+			} else {
+				m.logger.Warn("Fail2ban config path check failed", zap.String("path", cfg.Fail2banConfigPath), zap.Error(err))
+			}
+		} else if !fi.IsDir() {
+			m.logger.Warn("Fail2ban config path is not a directory", zap.String("path", cfg.Fail2banConfigPath))
+		} else {
+			m.logger.Info("Fail2ban config path verified", zap.String("path", cfg.Fail2banConfigPath))
+		}
+	}
 
 	if err := os.MkdirAll(filepath.Dir(cfg.BlockLogOutput), 0o755); err != nil {
 		return nil, fmt.Errorf("create block log directory: %w", err)
 	}
 
+	m.logger.Info("Opening bridge log", zap.String("path", cfg.BlockLogOutput))
 	blockLog, err := os.OpenFile(cfg.BlockLogOutput, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return nil, fmt.Errorf("open block log output: %w", err)
@@ -69,10 +97,10 @@ func New(cfg config.Config) (*Monitor, error) {
 				m.logger.Warn("failed to open GeoIP DB", zap.String("path", cfg.GeoIPDBPath), zap.Error(err))
 			} else {
 				m.geoDB = geoDB
-				m.logger.Info("GeoIP Database loaded successfully")
+				m.logger.Info("GeoIP database loaded")
 			}
 		} else {
-			m.logger.Warn("GeoIP DB not found; country checks disabled", zap.String("path", cfg.GeoIPDBPath))
+			m.logger.Warn("GeoIP DB missing; country checks disabled", zap.String("path", cfg.GeoIPDBPath))
 		}
 	}
 
@@ -94,7 +122,8 @@ func (m *Monitor) Run(ctx context.Context) error {
 	errCh := make(chan error, len(m.cfg.LogSources))
 	var wg sync.WaitGroup
 
-	m.logger.Info("Monitor engine started")
+	m.logger.Info("Monitor engine starting")
+	m.logger.Info("Tailing log files", zap.Int("count", len(m.cfg.LogSources)))
 	for _, source := range m.cfg.LogSources {
 		source := source
 		wg.Add(1)

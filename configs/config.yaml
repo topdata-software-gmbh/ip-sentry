@@ -1,11 +1,11 @@
 log_sources:
-#  - "/var/log/nginx/access.log"
   - "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/access.log"
-block_log_output: "/var/log/nginx/go_blocks.log"
+block_log_output: "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/go_blocks.log"
+fail2ban_config_path: "/srv/topdata-nginx-proxy-v2/vol/fail2ban"
 geoip_db_path: "./data/geoip/GeoLite2-City.mmdb"
 
 thresholds:
-  max_requests_per_minute: 100
+  max_requests_per_minute: 50
 
 blacklist:
   countries: ["CN", "RU", "IN"]

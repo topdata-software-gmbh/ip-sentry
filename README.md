@@ -14,8 +14,9 @@ Default config path: `configs/config.yaml`
 
 ```yaml
 log_sources:
-  - "/var/log/nginx/access.log"
-block_log_output: "/var/log/nginx/go_blocks.log"
+  - "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/access.log"
+block_log_output: "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/go_blocks.log"
+fail2ban_config_path: "/srv/topdata-nginx-proxy-v2/vol/fail2ban"
 geoip_db_path: "./data/geoip/GeoLite2-City.mmdb"
 ```
 
