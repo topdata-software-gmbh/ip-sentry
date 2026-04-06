@@ -1,0 +1,40 @@
+# Binaries
+ip-sentry
+ip-sentry-*
+*.exe
+
+# Go build artifacts
+*.test
+*.out
+*.prof
+
+# Dependency directories
+vendor/
+
+# IDE/OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local configuration
+.env
+.env.local
+
+# Data files
+data/geoip/*.mmdb
+
+# Build cache
+.cache/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# Documentation/plans (keep _ai structure but ignore generated reports if needed)
+# _ai/ is tracked by design; only ignore specific subdirectories if necessary

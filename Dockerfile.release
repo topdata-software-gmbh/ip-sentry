@@ -1,0 +1,20 @@
+# Minimal runtime image for GoReleaser builds
+FROM alpine:latest
+
+RUN apk add --no-cache ca-certificates tzdata
+
+WORKDIR /app
+RUN mkdir -p /app/configs /app/data/geoip
+
+# GoReleaser copies the binary into the root of the build context
+COPY ip-sentry /usr/local/bin/ip-sentry
+COPY scripts/ /app/scripts/
+
+# Create a startup preamble
+RUN echo "ip-sentry starting - build: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > /app/preamble.txt
+
+# Entrypoint script
+RUN printf '#!/bin/sh\ncat /app/preamble.txt\nexec /usr/local/bin/ip-sentry "$@"\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["run", "--config", "/app/configs/config.yaml"]

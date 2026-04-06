@@ -1,5 +1,5 @@
-# Build artifacts
-ip-sentry
+# Build artifacts (except for GoReleaser release Dockerfile)
+!ip-sentry
 topdata-ip-aggregator
 
 # Go test cache

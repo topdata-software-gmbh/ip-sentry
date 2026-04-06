@@ -8,7 +8,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile string
+	version string
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "ip-sentry",

@@ -52,65 +52,31 @@ All fields can be overridden via environment variables (prefix: `IPSENTRY_`).
 
 ---
 
-## Building & Running Locally
+## Installation
 
-```bash
-# Build
-go build -o ip-sentry .
+### Container Image (Recommended)
 
-# Run
-./ip-sentry run --config configs/config.yaml
-```
-
-Or without building:
-
-```bash
-go run . run --config configs/config.yaml
-```
-
-### Fetch the GeoIP Database
-
-```bash
-bash scripts/fetch-geoip-database-v2.sh
-```
-
----
-
-## Docker
-
-### Build Image
-
-```bash
-docker build -t ip-sentry:latest .
-```
-
-### Run Container
-
-```bash
-docker run --rm \
-  -v /var/log/nginx:/var/log/nginx \
-  -v $(pwd)/configs:/app/configs:ro \
-  -v $(pwd)/data/geoip:/app/data/geoip:ro \
-  ip-sentry:latest run --config /app/configs/config.yaml
-```
-
----
-
-## Docker Compose Integration
-
-Add the following service to your `docker-compose.yaml` alongside your Nginx and Fail2Ban services:
+Images are automatically published to GitHub Container Registry.
 
 ```yaml
-ip-sentry:
-  image: ip-sentry:latest
-  container_name: ip-sentry
-  restart: unless-stopped
-  volumes:
-    - ./vol/nginx_logs:/var/log/nginx
-    - ../topdata-ip-aggregator/configs:/app/configs:ro
-    - ../topdata-ip-aggregator/data/geoip:/app/data/geoip:ro
-  command: ["run", "--config", "/app/configs/config.yaml"]
+services:
+  ip-sentry:
+    image: ghcr.io/topdata-software-gmbh/ip-sentry:latest
+    # ... rest of config
 ```
+
+### Binary Downloads
+
+Download the pre-compiled binaries for Linux, macOS, and Windows from the [Releases](https://github.com/topdata-software-gmbh/ip-sentry/releases) page.
+
+---
+
+## Development
+
+### CI/CD
+This project uses GitHub Actions for CI/CD:
+- **Linting & Tests**: Triggered on every Pull Request to `main`.
+- **Releases**: Triggered by pushing a git tag (e.g., `git tag v1.0.0 && git push origin v1.0.0`). GoReleaser handles the build and publication.
 
 ---
 
