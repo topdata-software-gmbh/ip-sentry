@@ -1,17 +1,17 @@
 log_sources:
-  - "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/access.log"
+    - "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/access.log"
 block_log_output: "/srv/topdata-nginx-proxy-v2/vol/nginx_logs/ip-sentry-blocks.log"
 fail2ban_config_path: "/srv/topdata-nginx-proxy-v2/vol/fail2ban"
 geoip_db_path: "./data/geoip/GeoLite2-City.mmdb"
 
 thresholds:
-  # Lowered to 30 for testing to catch scrapers quickly
-  max_requests_per_minute: 30
+    # Lowered to 30 for testing to catch scrapers quickly
+    max_requests_per_minute: 30
 
 blacklist:
-  countries: ["CN", "RU", "IN"]
-  hostnames: [".amazonaws.com", ".compute.internal"]
+    countries: [ "CN", "RU", "IN", "IR", "SG", "SA", "AE", "QA", "KW", "BH", "OM", "IL" ]
+    hostnames: [ ".amazonaws.com", ".compute.internal" ]
 
 whitelist:
-  hostnames: [".googlebot.com", ".search.msn.com"]
+    hostnames: [ ".googlebot.com", ".search.msn.com" ]
 
