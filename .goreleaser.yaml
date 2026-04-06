@@ -44,10 +44,12 @@ changelog:
       - '^docs:'
       - '^test:'
 
+# .goreleaser.yaml
 dockers:
   - image_templates:
-      - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/ip-sentry:{{ .Version }}"
-      - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/ip-sentry:latest"
+      # Use lowercase for the repository owner
+      - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER | lower }}/ip-sentry:{{ .Version }}"
+      - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER | lower }}/ip-sentry:latest"
     dockerfile: Dockerfile.release
     use: buildx
     build_flag_templates:
@@ -56,4 +58,6 @@ dockers:
       - "--label=org.opencontainers.image.source={{ .GitURL }}"
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.created={{ .Date }}"
+      # Since you are building for multiple architectures,
+      # this ensures the correct platform is passed to Docker
       - "--platform=linux/{{ .Arch }}"
