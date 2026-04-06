@@ -11,7 +11,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - amd64
       - arm64
@@ -20,9 +19,6 @@ builds:
 
 archives:
   - format: tar.gz
-    format_overrides:
-      - goos: windows
-        format: zip
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -48,8 +44,8 @@ changelog:
 dockers:
   - image_templates:
       # Use lowercase for the repository owner
-      - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER | lower }}/ip-sentry:{{ .Version }}"
-      - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER | lower }}/ip-sentry:latest"
+      - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/ip-sentry:{{ .Version }}"
+      - "ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/ip-sentry:latest"
     dockerfile: Dockerfile.release
     use: buildx
     build_flag_templates:
