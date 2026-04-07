@@ -186,6 +186,17 @@ func (m *Monitor) Run(ctx context.Context) error {
 	}
 }
 
+func formatTopItems(items []models.TopItem) string {
+	if len(items) == 0 {
+		return "none"
+	}
+	var parts []string
+	for _, it := range items {
+		parts = append(parts, fmt.Sprintf("%s:%d", it.Key, it.Count))
+	}
+	return strings.Join(parts, ", ")
+}
+
 func (m *Monitor) startHeartbeat(ctx context.Context) {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
@@ -199,6 +210,8 @@ func (m *Monitor) startHeartbeat(ctx context.Context) {
 				zap.Uint64("processed_lines", m.stats.Processed()),
 				zap.Uint64("successfully_parsed", m.stats.Parsed()),
 				zap.Uint64("blocks_generated", m.stats.Blocks()),
+				zap.String("top_countries", formatTopItems(m.stats.TopCountries(5))),
+				zap.String("top_user_agents", formatTopItems(m.stats.TopUserAgents(5))),
 			)
 		}
 	}
@@ -255,6 +268,9 @@ func (m *Monitor) processLine(line string) error {
 
 	country := m.lookupCountry(entry.IP)
 	hostname := m.lookupHostname(entry.IP)
+	
+	m.stats.RecordRequest(country, entry.UserAgent)
+
 	event := m.detector.Process(entry, country, hostname)
 	if event == nil {
 		return nil

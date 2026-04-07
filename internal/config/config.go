@@ -5,8 +5,9 @@ type Thresholds struct {
 }
 
 type Blacklist struct {
-	Countries []string `mapstructure:"countries"`
-	Hostnames []string `mapstructure:"hostnames"`
+	Countries  []string `mapstructure:"countries"`
+	Hostnames  []string `mapstructure:"hostnames"`
+	UserAgents []string `mapstructure:"user_agents"`
 }
 
 type Whitelist struct {

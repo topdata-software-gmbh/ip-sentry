@@ -11,14 +11,15 @@ import (
 )
 
 type Detector struct {
-	mu                 sync.Mutex
-	counters           map[string][]time.Time
-	lastBlock          map[string]time.Time
-	threshold          int
-	blacklistCountries []string
-	blacklistHosts     []string
-	whitelistHosts     []string
-	blockCooldown      time.Duration
+	mu                  sync.Mutex
+	counters            map[string][]time.Time
+	lastBlock           map[string]time.Time
+	threshold           int
+	blacklistCountries  []string
+	blacklistHosts      []string
+	blacklistUserAgents []string
+	whitelistHosts      []string
+	blockCooldown       time.Duration
 }
 
 func NewDetector(cfg config.Config) *Detector {
@@ -28,13 +29,14 @@ func NewDetector(cfg config.Config) *Detector {
 	}
 
 	return &Detector{
-		counters:           make(map[string][]time.Time),
-		lastBlock:          make(map[string]time.Time),
-		threshold:          threshold,
-		blacklistCountries: cfg.Blacklist.Countries,
-		blacklistHosts:     cfg.Blacklist.Hostnames,
-		whitelistHosts:     cfg.Whitelist.Hostnames,
-		blockCooldown:      time.Minute,
+		counters:            make(map[string][]time.Time),
+		lastBlock:           make(map[string]time.Time),
+		threshold:           threshold,
+		blacklistCountries:  cfg.Blacklist.Countries,
+		blacklistHosts:      cfg.Blacklist.Hostnames,
+		blacklistUserAgents: cfg.Blacklist.UserAgents,
+		whitelistHosts:      cfg.Whitelist.Hostnames,
+		blockCooldown:       time.Minute,
 	}
 }
 
@@ -61,6 +63,10 @@ func (d *Detector) Process(entry *models.AccessLogEntry, country, hostname strin
 
 	if d.isBlacklistedHost(hostname) {
 		return d.makeBlockEvent(entry.IP, "BLACKLISTED_HOSTNAME", country, hostname, now)
+	}
+
+	if d.isBlacklistedUserAgent(entry.UserAgent) {
+		return d.makeBlockEvent(entry.IP, "BLACKLISTED_USER_AGENT", country, hostname, now)
 	}
 
 	windowStart := now.Add(-1 * time.Minute)
@@ -114,6 +120,20 @@ func (d *Detector) isBlacklistedHost(hostname string) bool {
 
 func (d *Detector) isWhitelistedHost(hostname string) bool {
 	return matchesSuffixList(hostname, d.whitelistHosts)
+}
+
+func (d *Detector) isBlacklistedUserAgent(userAgent string) bool {
+	ua := strings.ToLower(strings.TrimSpace(userAgent))
+	if ua == "" || ua == "-" {
+		return false
+	}
+	for _, blocked := range d.blacklistUserAgents {
+		s := strings.ToLower(strings.TrimSpace(blocked))
+		if s != "" && strings.Contains(ua, s) {
+			return true
+		}
+	}
+	return false
 }
 
 func matchesSuffixList(hostname string, suffixes []string) bool {

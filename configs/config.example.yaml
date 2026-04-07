@@ -11,6 +11,10 @@ thresholds:
 blacklist:
     countries: [ "CN", "RU", "IN", "IR", "SG", "SA", "AE", "QA", "KW", "BH", "OM", "IL" ]
     hostnames: [ ".amazonaws.com", ".compute.internal" ]
+    user_agents:
+        - "badbot"
+        - "scanner"
+        - "wget"
 
 whitelist:
     hostnames: [ ".googlebot.com", ".search.msn.com" ]
