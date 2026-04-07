@@ -20,15 +20,16 @@ import (
 )
 
 type Monitor struct {
-	cfg        config.Config
-	detector   *aggregator.Detector
-	logger     *zap.Logger
-	geoDB      *geoip2.Reader
-	blockLog   *os.File
-	hostCache  map[string]string
-	hostCacheM sync.RWMutex
-	hostFlight sync.Map
-	stats      models.GlobalStats
+	cfg          config.Config
+	detector     *aggregator.Detector
+	logger       *zap.Logger
+	geoDB        *geoip2.Reader
+	blockLog     *os.File
+	heartbeatLog *os.File
+	hostCache    map[string]string
+	hostCacheM   sync.RWMutex
+	hostFlight   sync.Map
+	stats        models.GlobalStats
 }
 
 func New(cfg config.Config) (*Monitor, error) {
@@ -55,6 +56,11 @@ func New(cfg config.Config) (*Monitor, error) {
 		zap.Int("sources", len(cfg.LogSources)),
 		zap.String("output", cfg.BlockLogOutput),
 	)
+
+	heartbeatPath := cfg.HeartbeatStatsOutput
+	if strings.TrimSpace(heartbeatPath) == "" {
+		heartbeatPath = filepath.Join(filepath.Dir(cfg.BlockLogOutput), "ip-sentry-heartbeat-stats.log")
+	}
 
 	m.logger.Info("Checking infrastructure paths")
 	for _, source := range cfg.LogSources {
@@ -94,6 +100,17 @@ func New(cfg config.Config) (*Monitor, error) {
 	}
 	m.blockLog = blockLog
 
+	if err := os.MkdirAll(filepath.Dir(heartbeatPath), 0o755); err != nil {
+		return nil, fmt.Errorf("create heartbeat stats directory: %w", err)
+	}
+
+	m.logger.Info("Opening heartbeat stats log", zap.String("path", heartbeatPath))
+	heartbeatLog, err := os.OpenFile(heartbeatPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("open heartbeat stats output: %w", err)
+	}
+	m.heartbeatLog = heartbeatLog
+
 	if cfg.GeoIPDBPath != "" {
 		if _, err := os.Stat(cfg.GeoIPDBPath); err == nil {
 			geoDB, err := geoip2.Open(cfg.GeoIPDBPath)
@@ -117,6 +134,9 @@ func (m *Monitor) Close() {
 	}
 	if m.blockLog != nil {
 		_ = m.blockLog.Close()
+	}
+	if m.heartbeatLog != nil {
+		_ = m.heartbeatLog.Close()
 	}
 	_ = m.logger.Sync()
 }
@@ -206,13 +226,46 @@ func (m *Monitor) startHeartbeat(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			processed := m.stats.Processed()
+			parsed := m.stats.Parsed()
+			blocks := m.stats.Blocks()
+			whitelistHits := m.stats.WhitelistHostnameHits()
+			blockedByCountry := m.stats.BlockedByCountry()
+			blockedByHostname := m.stats.BlockedByHostname()
+			blockedByUserAgent := m.stats.BlockedByUserAgent()
+			blockedByRateLimit := m.stats.BlockedByRateLimit()
+			blockedByOther := m.stats.BlockedByOther()
+
 			m.logger.Info("HEARTBEAT STATS",
-				zap.Uint64("processed_lines", m.stats.Processed()),
-				zap.Uint64("successfully_parsed", m.stats.Parsed()),
-				zap.Uint64("blocks_generated", m.stats.Blocks()),
-				zap.String("top_countries", formatTopItems(m.stats.TopCountries(5))),
-				zap.String("top_user_agents", formatTopItems(m.stats.TopUserAgents(5))),
+				zap.Uint64("processed_lines", processed),
+				zap.Uint64("successfully_parsed", parsed),
+				zap.Uint64("blocks_generated", blocks),
+				zap.Uint64("hostname_whitelist_hits", whitelistHits),
+				zap.Uint64("blocked_by_country", blockedByCountry),
+				zap.Uint64("blocked_by_hostname", blockedByHostname),
+				zap.Uint64("blocked_by_user_agent", blockedByUserAgent),
+				zap.Uint64("blocked_by_rate_limit", blockedByRateLimit),
+				zap.Uint64("blocked_by_other", blockedByOther),
 			)
+
+			if m.heartbeatLog != nil {
+				_, _ = fmt.Fprintf(
+					m.heartbeatLog,
+					"%s HEARTBEAT_DETAIL processed_lines=%d successfully_parsed=%d blocks_generated=%d hostname_whitelist_hits=%d blocked_by_country=%d blocked_by_hostname=%d blocked_by_user_agent=%d blocked_by_rate_limit=%d blocked_by_other=%d top_countries=%q top_user_agents=%q\n",
+					time.Now().UTC().Format(time.RFC3339),
+					processed,
+					parsed,
+					blocks,
+					whitelistHits,
+					blockedByCountry,
+					blockedByHostname,
+					blockedByUserAgent,
+					blockedByRateLimit,
+					blockedByOther,
+					formatTopItems(m.stats.TopCountries(5)),
+					formatTopItems(m.stats.TopUserAgents(5)),
+				)
+			}
 		}
 	}
 }
@@ -271,11 +324,17 @@ func (m *Monitor) processLine(line string) error {
 
 	m.stats.RecordRequest(country, entry.UserAgent)
 
-	event := m.detector.Process(entry, country, hostname)
+	result := m.detector.ProcessWithMetadata(entry, country, hostname)
+	if result.WhitelistHostnameMatch {
+		m.stats.IncrementWhitelistHostnameHits()
+	}
+
+	event := result.Event
 	if event == nil {
 		return nil
 	}
 	m.stats.IncrementBlocks()
+	m.stats.IncrementBlocksByMechanism(result.Mechanism)
 
 	_, err := fmt.Fprintf(
 		m.blockLog,

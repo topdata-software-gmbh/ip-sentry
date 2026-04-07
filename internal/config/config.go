@@ -15,11 +15,12 @@ type Whitelist struct {
 }
 
 type Config struct {
-	LogSources         []string   `mapstructure:"log_sources"`
-	BlockLogOutput     string     `mapstructure:"block_log_output"`
-	Fail2banConfigPath string     `mapstructure:"fail2ban_config_path"`
-	GeoIPDBPath        string     `mapstructure:"geoip_db_path"`
-	Thresholds         Thresholds `mapstructure:"thresholds"`
-	Blacklist          Blacklist  `mapstructure:"blacklist"`
-	Whitelist          Whitelist  `mapstructure:"whitelist"`
+	LogSources           []string   `mapstructure:"log_sources"`
+	BlockLogOutput       string     `mapstructure:"block_log_output"`
+	HeartbeatStatsOutput string     `mapstructure:"heartbeat_stats_output"`
+	Fail2banConfigPath   string     `mapstructure:"fail2ban_config_path"`
+	GeoIPDBPath          string     `mapstructure:"geoip_db_path"`
+	Thresholds           Thresholds `mapstructure:"thresholds"`
+	Blacklist            Blacklist  `mapstructure:"blacklist"`
+	Whitelist            Whitelist  `mapstructure:"whitelist"`
 }

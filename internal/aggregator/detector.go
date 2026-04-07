@@ -41,8 +41,13 @@ func NewDetector(cfg config.Config) *Detector {
 }
 
 func (d *Detector) Process(entry *models.AccessLogEntry, country, hostname string) *models.BlockEvent {
+	result := d.ProcessWithMetadata(entry, country, hostname)
+	return result.Event
+}
+
+func (d *Detector) ProcessWithMetadata(entry *models.AccessLogEntry, country, hostname string) models.DetectionResult {
 	if entry == nil || entry.IP == "" {
-		return nil
+		return models.DetectionResult{}
 	}
 
 	now := entry.Timestamp
@@ -54,19 +59,28 @@ func (d *Detector) Process(entry *models.AccessLogEntry, country, hostname strin
 	defer d.mu.Unlock()
 
 	if d.isWhitelistedHost(hostname) {
-		return nil
+		return models.DetectionResult{Mechanism: "WHITELIST_HOSTNAME", WhitelistHostnameMatch: true}
 	}
 
 	if d.isBlacklistedCountry(country) {
-		return d.makeBlockEvent(entry.IP, "BLACKLISTED_COUNTRY", country, hostname, now)
+		return models.DetectionResult{
+			Event:     d.makeBlockEvent(entry.IP, "BLACKLISTED_COUNTRY", country, hostname, now),
+			Mechanism: "BLACKLISTED_COUNTRY",
+		}
 	}
 
 	if d.isBlacklistedHost(hostname) {
-		return d.makeBlockEvent(entry.IP, "BLACKLISTED_HOSTNAME", country, hostname, now)
+		return models.DetectionResult{
+			Event:     d.makeBlockEvent(entry.IP, "BLACKLISTED_HOSTNAME", country, hostname, now),
+			Mechanism: "BLACKLISTED_HOSTNAME",
+		}
 	}
 
 	if d.isBlacklistedUserAgent(entry.UserAgent) {
-		return d.makeBlockEvent(entry.IP, "BLACKLISTED_USER_AGENT", country, hostname, now)
+		return models.DetectionResult{
+			Event:     d.makeBlockEvent(entry.IP, "BLACKLISTED_USER_AGENT", country, hostname, now),
+			Mechanism: "BLACKLISTED_USER_AGENT",
+		}
 	}
 
 	windowStart := now.Add(-1 * time.Minute)
@@ -82,10 +96,13 @@ func (d *Detector) Process(entry *models.AccessLogEntry, country, hostname strin
 
 	if len(filtered) > d.threshold {
 		reason := fmt.Sprintf("RATE_LIMIT_EXCEEDED_%d_PER_MIN", d.threshold)
-		return d.makeBlockEvent(entry.IP, reason, country, hostname, now)
+		return models.DetectionResult{
+			Event:     d.makeBlockEvent(entry.IP, reason, country, hostname, now),
+			Mechanism: "RATE_LIMIT_EXCEEDED",
+		}
 	}
 
-	return nil
+	return models.DetectionResult{}
 }
 
 func (d *Detector) makeBlockEvent(ip, reason, country, hostname string, now time.Time) *models.BlockEvent {

@@ -17,3 +17,9 @@ type BlockEvent struct {
 	Country string
 	Host    string
 }
+
+type DetectionResult struct {
+	Event                  *BlockEvent
+	Mechanism              string
+	WhitelistHostnameMatch bool
+}
