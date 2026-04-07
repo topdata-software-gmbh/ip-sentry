@@ -268,7 +268,7 @@ func (m *Monitor) processLine(line string) error {
 
 	country := m.lookupCountry(entry.IP)
 	hostname := m.lookupHostname(entry.IP)
-	
+
 	m.stats.RecordRequest(country, entry.UserAgent)
 
 	event := m.detector.Process(entry, country, hostname)

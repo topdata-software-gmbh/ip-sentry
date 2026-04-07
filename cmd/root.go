@@ -25,6 +25,11 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	if version == "" {
+		version = "dev"
+	}
+	rootCmd.Version = version
+
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path")
 	_ = viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 
