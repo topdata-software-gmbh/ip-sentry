@@ -27,6 +27,7 @@ type Monitor struct {
 	blockLog   *os.File
 	hostCache  map[string]string
 	hostCacheM sync.RWMutex
+	hostFlight sync.Map
 	stats      models.GlobalStats
 }
 
@@ -143,6 +144,34 @@ func (m *Monitor) Run(ctx context.Context) error {
 		close(lineCh)
 	}()
 
+	var workerWg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		workerWg.Add(1)
+		go func() {
+			defer workerWg.Done()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case line, ok := <-lineCh:
+					if !ok {
+						return
+					}
+					m.stats.IncrementProcessed()
+					if err := m.processLine(line); err != nil {
+						m.logger.Warn("line processing failed", zap.Error(err))
+					}
+				}
+			}
+		}()
+	}
+
+	doneCh := make(chan struct{})
+	go func() {
+		workerWg.Wait()
+		close(doneCh)
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -151,14 +180,8 @@ func (m *Monitor) Run(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-		case line, ok := <-lineCh:
-			if !ok {
-				return nil
-			}
-			m.stats.IncrementProcessed()
-			if err := m.processLine(line); err != nil {
-				m.logger.Warn("line processing failed", zap.Error(err))
-			}
+		case <-doneCh:
+			return nil
 		}
 	}
 }
@@ -283,6 +306,19 @@ func (m *Monitor) lookupHostname(ip string) string {
 		return host
 	}
 	m.hostCacheM.RUnlock()
+
+	chI, loaded := m.hostFlight.LoadOrStore(ip, make(chan struct{}))
+	if loaded {
+		<-chI.(chan struct{})
+		m.hostCacheM.RLock()
+		host := m.hostCache[ip]
+		m.hostCacheM.RUnlock()
+		return host
+	}
+	defer func() {
+		close(chI.(chan struct{}))
+		m.hostFlight.Delete(ip)
+	}()
 
 	names, err := net.LookupAddr(ip)
 	if err != nil || len(names) == 0 {
