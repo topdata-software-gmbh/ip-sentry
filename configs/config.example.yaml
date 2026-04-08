@@ -7,16 +7,22 @@ geoip_db_path: "./data/geoip/GeoLite2-City.mmdb"
 
 thresholds:
     # Lowered to 30 for testing to catch scrapers quickly
-    max_requests_per_minute: 30
+    max_requests_per_minute: 200
 
 blacklist:
-    countries: [ "CN", "RU", "IN", "IR", "SG", "SA", "AE", "QA", "KW", "BH", "OM", "IL" ]
-    hostnames: [ ".amazonaws.com", ".compute.internal" ]
-    user_agents:
-        - "badbot"
-        - "scanner"
-        - "wget"
+    countries: [ "CN", "RU", "IN", "IR", "SG", "SA", "AE", "QA", "KW", "BH", "OM", "IL", "US", "BR", "ID", "TR", "VN", "PK", "UA", "HK", "CA" ]
+    hostnames:
+        - ".amazonaws.com"
+        - ".compute.internal"
+        - ".googleusercontent.com"
+        - ".hetzner."
+        - ".ovh."
+        - ".digitalocean."
+        - ".linode."
+        - ".as2116.net" # Common bot hosting
 
 whitelist:
-    hostnames: [ ".googlebot.com", ".search.msn.com" ]
-
+    hostnames:
+        - ".googlebot.com"
+        - ".search.msn.com"
+        - ".uptimerobot.com"
