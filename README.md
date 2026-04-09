@@ -1,5 +1,8 @@
 # ip-sentry
 
+![ip-sentry-logo.png](ip-sentry-logo.png)
+
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Real-time Nginx access-log monitor with proactive block-event generation for [Fail2Ban](https://www.fail2ban.org/).
