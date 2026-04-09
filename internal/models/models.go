@@ -22,4 +22,5 @@ type DetectionResult struct {
 	Event                  *BlockEvent
 	Mechanism              string
 	WhitelistHostnameMatch bool
+	WhitelistIPMatch       bool
 }

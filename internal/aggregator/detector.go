@@ -19,6 +19,7 @@ type Detector struct {
 	blacklistHosts      []string
 	blacklistUserAgents []string
 	whitelistHosts      []string
+	whitelistIPs        []string
 	blockCooldown       time.Duration
 }
 
@@ -36,6 +37,7 @@ func NewDetector(cfg config.Config) *Detector {
 		blacklistHosts:      cfg.Blacklist.Hostnames,
 		blacklistUserAgents: cfg.Blacklist.UserAgents,
 		whitelistHosts:      cfg.Whitelist.Hostnames,
+		whitelistIPs:        cfg.Whitelist.IPs,
 		blockCooldown:       time.Minute,
 	}
 }
@@ -60,6 +62,10 @@ func (d *Detector) ProcessWithMetadata(entry *models.AccessLogEntry, country, ho
 
 	if d.isWhitelistedHost(hostname) {
 		return models.DetectionResult{Mechanism: "WHITELIST_HOSTNAME", WhitelistHostnameMatch: true}
+	}
+
+	if d.isWhitelistedIP(entry.IP) {
+		return models.DetectionResult{Mechanism: "WHITELIST_IP", WhitelistIPMatch: true}
 	}
 
 	if d.isBlacklistedCountry(country) {
@@ -137,6 +143,19 @@ func (d *Detector) isBlacklistedHost(hostname string) bool {
 
 func (d *Detector) isWhitelistedHost(hostname string) bool {
 	return matchesSuffixList(hostname, d.whitelistHosts)
+}
+
+func (d *Detector) isWhitelistedIP(ip string) bool {
+	if ip == "" {
+		return false
+	}
+	ip = strings.TrimSpace(ip)
+	for _, whitelisted := range d.whitelistIPs {
+		if strings.EqualFold(strings.TrimSpace(whitelisted), ip) {
+			return true
+		}
+	}
+	return false
 }
 
 func (d *Detector) isBlacklistedUserAgent(userAgent string) bool {

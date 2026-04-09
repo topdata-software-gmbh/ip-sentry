@@ -12,6 +12,7 @@ type Blacklist struct {
 
 type Whitelist struct {
 	Hostnames []string `mapstructure:"hostnames"`
+	IPs       []string `mapstructure:"ips"`
 }
 
 type Config struct {
