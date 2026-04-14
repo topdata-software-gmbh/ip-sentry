@@ -23,4 +23,5 @@ type DetectionResult struct {
 	Mechanism              string
 	WhitelistHostnameMatch bool
 	WhitelistIPRangeMatch  bool
+	WhitelistIPMatch       bool
 }

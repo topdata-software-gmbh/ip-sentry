@@ -26,6 +26,10 @@ whitelist:
         - ".googlebot.com"
         - ".search.msn.com"
         - ".uptimerobot.com"
+    ips:
+        - "192.168.1.100"
+        - "10.0.0.50"
+        - "172.16.0.25"
     # Static CIDR ranges to always allow (optional)
     # ip_ranges:
     #     - "10.0.0.0/8"

@@ -1,6 +1,6 @@
 # Binaries
 ip-sentry
-ip-sentry-*
+# ip-sentry-*
 *.exe
 
 # Go build artifacts
@@ -35,6 +35,9 @@ data/geoip/*.mmdb
 
 # Logs
 *.log
+
+.codebuddy
+
 
 # Documentation/plans (keep _ai structure but ignore generated reports if needed)
 # _ai/ is tracked by design; only ignore specific subdirectories if necessary

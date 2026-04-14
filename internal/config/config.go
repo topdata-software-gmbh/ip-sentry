@@ -16,6 +16,7 @@ type CloudflareWhitelist struct {
 
 type Whitelist struct {
 	Hostnames  []string            `mapstructure:"hostnames"`
+	IPs        []string            `mapstructure:"ips"`
 	IPRanges   []string            `mapstructure:"ip_ranges"`
 	Cloudflare CloudflareWhitelist `mapstructure:"cloudflare"`
 }
