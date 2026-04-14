@@ -13,6 +13,7 @@ type GlobalStats struct {
 	UniqueIPsSeen   uint64
 
 	WhitelistHostnameHitsCount uint64
+	WhitelistIPRangeHitsCount  uint64
 	BlocksByCountry            uint64
 	BlocksByHostname           uint64
 	BlocksByUserAgent          uint64
@@ -34,6 +35,9 @@ func (s *GlobalStats) IncrementParsed()    { atomic.AddUint64(&s.LinesParsed, 1)
 func (s *GlobalStats) IncrementBlocks()    { atomic.AddUint64(&s.BlocksRequested, 1) }
 func (s *GlobalStats) IncrementWhitelistHostnameHits() {
 	atomic.AddUint64(&s.WhitelistHostnameHitsCount, 1)
+}
+func (s *GlobalStats) IncrementWhitelistIPRangeHits() {
+	atomic.AddUint64(&s.WhitelistIPRangeHitsCount, 1)
 }
 
 func (s *GlobalStats) IncrementBlocksByMechanism(mechanism string) {
@@ -97,6 +101,9 @@ func (s *GlobalStats) Parsed() uint64    { return atomic.LoadUint64(&s.LinesPars
 func (s *GlobalStats) Blocks() uint64    { return atomic.LoadUint64(&s.BlocksRequested) }
 func (s *GlobalStats) WhitelistHostnameHits() uint64 {
 	return atomic.LoadUint64(&s.WhitelistHostnameHitsCount)
+}
+func (s *GlobalStats) WhitelistIPRangeHits() uint64 {
+	return atomic.LoadUint64(&s.WhitelistIPRangeHitsCount)
 }
 func (s *GlobalStats) BlockedByCountry() uint64  { return atomic.LoadUint64(&s.BlocksByCountry) }
 func (s *GlobalStats) BlockedByHostname() uint64 { return atomic.LoadUint64(&s.BlocksByHostname) }

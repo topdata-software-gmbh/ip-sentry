@@ -16,6 +16,7 @@ import (
 	"github.com/topdata-software-gmbh/ip-sentry/internal/config"
 	"github.com/topdata-software-gmbh/ip-sentry/internal/models"
 	"github.com/topdata-software-gmbh/ip-sentry/internal/parser"
+	"github.com/topdata-software-gmbh/ip-sentry/internal/whitelist"
 	"go.uber.org/zap"
 )
 
@@ -125,6 +126,11 @@ func New(cfg config.Config) (*Monitor, error) {
 		}
 	}
 
+	// --- Whitelist IP ranges ---
+	if err := m.loadWhitelistIPRanges(); err != nil {
+		m.logger.Warn("Failed to load whitelist IP ranges", zap.Error(err))
+	}
+
 	return m, nil
 }
 
@@ -230,6 +236,7 @@ func (m *Monitor) startHeartbeat(ctx context.Context) {
 			parsed := m.stats.Parsed()
 			blocks := m.stats.Blocks()
 			whitelistHits := m.stats.WhitelistHostnameHits()
+			whitelistIPRangeHits := m.stats.WhitelistIPRangeHits()
 			blockedByCountry := m.stats.BlockedByCountry()
 			blockedByHostname := m.stats.BlockedByHostname()
 			blockedByUserAgent := m.stats.BlockedByUserAgent()
@@ -241,6 +248,7 @@ func (m *Monitor) startHeartbeat(ctx context.Context) {
 				zap.Uint64("successfully_parsed", parsed),
 				zap.Uint64("blocks_generated", blocks),
 				zap.Uint64("hostname_whitelist_hits", whitelistHits),
+				zap.Uint64("ip_range_whitelist_hits", whitelistIPRangeHits),
 				zap.Uint64("blocked_by_country", blockedByCountry),
 				zap.Uint64("blocked_by_hostname", blockedByHostname),
 				zap.Uint64("blocked_by_user_agent", blockedByUserAgent),
@@ -251,12 +259,13 @@ func (m *Monitor) startHeartbeat(ctx context.Context) {
 			if m.heartbeatLog != nil {
 				_, _ = fmt.Fprintf(
 					m.heartbeatLog,
-					"%s HEARTBEAT_DETAIL processed_lines=%d successfully_parsed=%d blocks_generated=%d hostname_whitelist_hits=%d blocked_by_country=%d blocked_by_hostname=%d blocked_by_user_agent=%d blocked_by_rate_limit=%d blocked_by_other=%d top_countries=%q top_user_agents=%q\n",
+					"%s HEARTBEAT_DETAIL processed_lines=%d successfully_parsed=%d blocks_generated=%d hostname_whitelist_hits=%d ip_range_whitelist_hits=%d blocked_by_country=%d blocked_by_hostname=%d blocked_by_user_agent=%d blocked_by_rate_limit=%d blocked_by_other=%d top_countries=%q top_user_agents=%q\n",
 					time.Now().UTC().Format(time.RFC3339),
 					processed,
 					parsed,
 					blocks,
 					whitelistHits,
+					whitelistIPRangeHits,
 					blockedByCountry,
 					blockedByHostname,
 					blockedByUserAgent,
@@ -327,6 +336,9 @@ func (m *Monitor) processLine(line string) error {
 	result := m.detector.ProcessWithMetadata(entry, country, hostname)
 	if result.WhitelistHostnameMatch {
 		m.stats.IncrementWhitelistHostnameHits()
+	}
+	if result.WhitelistIPRangeMatch {
+		m.stats.IncrementWhitelistIPRangeHits()
 	}
 
 	event := result.Event
@@ -408,6 +420,38 @@ func (m *Monitor) lookupHostname(ip string) string {
 	m.hostCache[ip] = host
 	m.hostCacheM.Unlock()
 	return host
+}
+
+func (m *Monitor) loadWhitelistIPRanges() error {
+	var allNets []*net.IPNet
+
+	// Parse static IP ranges from config
+	if len(m.cfg.Whitelist.IPRanges) > 0 {
+		nets, err := whitelist.ParseStaticRanges(m.cfg.Whitelist.IPRanges)
+		if err != nil {
+			return fmt.Errorf("parse static IP ranges: %w", err)
+		}
+		m.logger.Info("Loaded static whitelist IP ranges", zap.Int("count", len(nets)))
+		allNets = append(allNets, nets...)
+	}
+
+	// Fetch Cloudflare IP ranges
+	if m.cfg.Whitelist.Cloudflare.Enabled {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		nets, err := whitelist.FetchCloudflareRanges(ctx, m.logger)
+		if err != nil {
+			return fmt.Errorf("fetch Cloudflare IP ranges: %w", err)
+		}
+		allNets = append(allNets, nets...)
+	}
+
+	if len(allNets) > 0 {
+		m.detector.SetWhitelistIPRanges(allNets)
+		m.logger.Info("Whitelist IP ranges active", zap.Int("total_ranges", len(allNets)))
+	}
+
+	return nil
 }
 
 func normalizeField(value string) string {

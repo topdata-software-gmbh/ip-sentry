@@ -10,8 +10,14 @@ type Blacklist struct {
 	UserAgents []string `mapstructure:"user_agents"`
 }
 
+type CloudflareWhitelist struct {
+	Enabled bool `mapstructure:"enabled"`
+}
+
 type Whitelist struct {
-	Hostnames []string `mapstructure:"hostnames"`
+	Hostnames  []string            `mapstructure:"hostnames"`
+	IPRanges   []string            `mapstructure:"ip_ranges"`
+	Cloudflare CloudflareWhitelist `mapstructure:"cloudflare"`
 }
 
 type Config struct {

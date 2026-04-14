@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"fmt"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +20,7 @@ type Detector struct {
 	blacklistHosts      []string
 	blacklistUserAgents []string
 	whitelistHosts      []string
+	whitelistIPRanges   []*net.IPNet
 	blockCooldown       time.Duration
 }
 
@@ -40,6 +42,13 @@ func NewDetector(cfg config.Config) *Detector {
 	}
 }
 
+// SetWhitelistIPRanges replaces the set of whitelisted IP ranges (thread-safe).
+func (d *Detector) SetWhitelistIPRanges(nets []*net.IPNet) {
+	d.mu.Lock()
+	d.whitelistIPRanges = nets
+	d.mu.Unlock()
+}
+
 func (d *Detector) Process(entry *models.AccessLogEntry, country, hostname string) *models.BlockEvent {
 	result := d.ProcessWithMetadata(entry, country, hostname)
 	return result.Event
@@ -57,6 +66,10 @@ func (d *Detector) ProcessWithMetadata(entry *models.AccessLogEntry, country, ho
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
+
+	if d.isWhitelistedIP(entry.IP) {
+		return models.DetectionResult{Mechanism: "WHITELIST_IP_RANGE", WhitelistIPRangeMatch: true}
+	}
 
 	if d.isWhitelistedHost(hostname) {
 		return models.DetectionResult{Mechanism: "WHITELIST_HOSTNAME", WhitelistHostnameMatch: true}
@@ -137,6 +150,22 @@ func (d *Detector) isBlacklistedHost(hostname string) bool {
 
 func (d *Detector) isWhitelistedHost(hostname string) bool {
 	return matchesSuffixList(hostname, d.whitelistHosts)
+}
+
+func (d *Detector) isWhitelistedIP(ipStr string) bool {
+	if len(d.whitelistIPRanges) == 0 {
+		return false
+	}
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return false
+	}
+	for _, ipNet := range d.whitelistIPRanges {
+		if ipNet.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }
 
 func (d *Detector) isBlacklistedUserAgent(userAgent string) bool {

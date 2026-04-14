@@ -26,3 +26,10 @@ whitelist:
         - ".googlebot.com"
         - ".search.msn.com"
         - ".uptimerobot.com"
+    # Static CIDR ranges to always allow (optional)
+    # ip_ranges:
+    #     - "10.0.0.0/8"
+    #     - "192.168.0.0/16"
+    cloudflare:
+        # Fetch Cloudflare IP ranges from https://www.cloudflare.com/ips-v4 and ips-v6
+        enabled: true
