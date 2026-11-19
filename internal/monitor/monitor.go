@@ -350,7 +350,8 @@ func (m *Monitor) processLine(line string) error {
 
 	_, err := fmt.Fprintf(
 		m.blockLog,
-		"%s - BLOCK_REQUESTED - Reason:%s Country:%s Host:%s\n",
+		"%s %s - BLOCK_REQUESTED - Reason:%s Country:%s Host:%s\n",
+		time.Now().UTC().Format(time.RFC3339),
 		event.IP,
 		normalizeField(event.Reason),
 		normalizeField(event.Country),

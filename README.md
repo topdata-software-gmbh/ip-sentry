@@ -88,14 +88,17 @@ This project uses GitHub Actions for CI/CD:
 The monitor writes one line per event to `block_log_output`:
 
 ```text
-<IP> - BLOCK_REQUESTED - Reason:<REASON> Country:<ISO_OR_DASH> Host:<HOST_OR_DASH>
+<RFC3339_UTC> <IP> - BLOCK_REQUESTED - Reason:<REASON> Country:<ISO_OR_DASH> Host:<HOST_OR_DASH>
 ```
 
 Example:
 
 ```text
-198.51.100.42 - BLOCK_REQUESTED - Reason:RATE_LIMIT_EXCEEDED_100_PER_MIN Country:RU Host:ec2-198-51-100-42.compute.internal
+2026-11-19T17:37:06Z 198.51.100.42 - BLOCK_REQUESTED - Reason:RATE_LIMIT_EXCEEDED_100_PER_MIN Country:RU Host:ec2-198-51-100-42.compute.internal
 ```
+
+The timestamp is required so log consumers such as Fail2Ban can apply
+`findtime` and `bantime` correctly.
 
 Fail2Ban can then be configured to watch this file and ban the IP using its standard actions.
 
